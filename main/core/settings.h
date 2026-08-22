@@ -26,6 +26,13 @@
 #define SESSION_TIMEOUT_DEFAULT_SEC 300
 #define SETTINGS_VERSION_MAX 32
 
+typedef enum {
+  TEXT_SIZE_STANDARD = 0,
+  TEXT_SIZE_LARGE = 1,
+} text_size_t;
+
+#define TEXT_SIZE_DEFAULT TEXT_SIZE_STANDARD
+
 KERN_WARN_UNUSED_RESULT esp_err_t settings_init(void);
 
 /* Close the settings NVS handle (required before nvs_flash_deinit) */
@@ -60,6 +67,8 @@ KERN_WARN_UNUSED_RESULT uint16_t settings_get_screensaver_timeout(void);
 esp_err_t settings_set_screensaver_timeout(uint16_t sec);
 KERN_WARN_UNUSED_RESULT uint16_t settings_get_session_timeout(void);
 esp_err_t settings_set_session_timeout(uint16_t sec);
+KERN_WARN_UNUSED_RESULT text_size_t settings_get_text_size(void);
+esp_err_t settings_set_text_size(text_size_t size);
 KERN_WARN_UNUSED_RESULT bool
 settings_disclaimer_acknowledged(const char *version);
 esp_err_t settings_acknowledge_disclaimer(const char *version);

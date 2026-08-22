@@ -22,6 +22,7 @@ static const char *KEY_PARTIAL_SIGNING = "part_sign";
 static const char *KEY_EXPECTED_OWNED_SIGNING = "exp_own_sign";
 static const char *KEY_SCREENSAVER = "scrn_svr";
 static const char *KEY_SESSION_TIMEOUT = "sess_tout";
+static const char *KEY_TEXT_SIZE = "text_size";
 static const char *KEY_DISCLAIMER_VERSION = "disc_ver";
 
 static nvs_handle_t settings_nvs;
@@ -245,6 +246,17 @@ uint16_t settings_get_session_timeout(void) {
 
 esp_err_t settings_set_session_timeout(uint16_t sec) {
   return settings_set_u16_and_commit(KEY_SESSION_TIMEOUT, sec);
+}
+
+text_size_t settings_get_text_size(void) {
+  uint8_t val = settings_get_u8_or_default(KEY_TEXT_SIZE, TEXT_SIZE_DEFAULT);
+  return (val <= TEXT_SIZE_LARGE) ? (text_size_t)val : TEXT_SIZE_DEFAULT;
+}
+
+esp_err_t settings_set_text_size(text_size_t size) {
+  if (size > TEXT_SIZE_LARGE)
+    size = TEXT_SIZE_DEFAULT;
+  return settings_set_u8_and_commit(KEY_TEXT_SIZE, (uint8_t)size);
 }
 
 bool settings_disclaimer_acknowledged(const char *version) {
