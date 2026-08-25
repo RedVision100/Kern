@@ -12,7 +12,7 @@ except ImportError as err:
 
 # Icon font sizes to generate. Add a size here and re-run scripts/bake_icons.sh
 # to emit a matching icons_<size>.c / icons_<size>.h pair.
-SIZES = (16, 22, 24, 28, 30, 32, 34, 40)
+SIZES = (16, 22, 24, 28, 30, 32, 34, 40, 48)
 
 
 ICONS = [

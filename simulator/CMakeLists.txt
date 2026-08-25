@@ -144,6 +144,7 @@ set(SIM_SOURCES
     ${APP_UI_DIR}/assets/icons_32.c
     ${APP_UI_DIR}/assets/icons_34.c
     ${APP_UI_DIR}/assets/icons_40.c
+    ${APP_UI_DIR}/assets/icons_48.c
 )
 
 # --- ESP-IDF stubs (NVS, FreeRTOS, eFuse, storage) ---

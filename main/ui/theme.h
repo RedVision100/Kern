@@ -3,6 +3,7 @@
 
 #include <lvgl.h>
 #include <stdbool.h>
+#include "../core/settings.h"
 
 void theme_init(void);
 lv_color_t bg_color(void);
@@ -25,6 +26,10 @@ lv_color_t accent_color(void);
 // Theme fonts
 const lv_font_t *theme_font_small(void);
 const lv_font_t *theme_font_medium(void);
+
+// Accessibility text size
+void theme_set_text_size(text_size_t size);
+text_size_t theme_get_text_size(void);
 
 // Screen dimensions (cached, never changes at runtime)
 int theme_screen_width(void);

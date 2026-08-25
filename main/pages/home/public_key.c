@@ -151,9 +151,7 @@ static void render_xpub(void) {
   lv_obj_update_layout(public_key_screen);
   int32_t qr_w = lv_obj_get_content_width(qr_parent);
   int32_t qr_h = lv_obj_get_content_height(qr_parent);
-  int32_t square_size = theme_is_landscape()
-                            ? LV_MIN(qr_w, qr_h)
-                            : LV_MIN(qr_w * 65 / 100, qr_h * 70 / 100);
+  int32_t square_size = LV_MIN(qr_w * 45 / 100, qr_h * 45 / 100);
 
   lv_obj_t *qr_container =
       theme_create_qr_container(qr_parent, square_size, theme_small_padding());
@@ -367,13 +365,6 @@ static lv_obj_t *create_public_key_screen(lv_obj_t *parent, bool landscape) {
   return screen;
 }
 
-static lv_obj_t *make_bottom_cell(lv_obj_t *parent) {
-  lv_obj_t *cell = create_flex_container(parent, LV_FLEX_FLOW_COLUMN,
-                                         LV_FLEX_ALIGN_CENTER, 0);
-  lv_obj_set_height(cell, LV_PCT(100));
-  lv_obj_set_flex_grow(cell, 1);
-  return cell;
-}
 
 static lv_obj_t *create_landscape_layout(void) {
   lv_obj_t *body =
@@ -386,13 +377,14 @@ static lv_obj_t *create_landscape_layout(void) {
       body, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_START, theme_default_padding());
   lv_obj_set_size(controls, LV_PCT(100), LV_SIZE_CONTENT);
 
-  lv_obj_t *bottom_row = create_flex_container(
-      body, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_CENTER, theme_default_padding());
-  lv_obj_set_size(bottom_row, LV_PCT(100), LV_PCT(100));
-  lv_obj_set_flex_grow(bottom_row, 1);
+  // Keep the QR above the xpub so the complete key remains readable.
+  lv_obj_t *content = create_flex_container(
+      body, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_CENTER, theme_small_padding());
+  lv_obj_set_size(content, LV_PCT(100), LV_SIZE_CONTENT);
+  lv_obj_set_flex_grow(content, 1);
 
-  qr_parent = make_bottom_cell(bottom_row);
-  xpub_parent = make_bottom_cell(bottom_row);
+  qr_parent = content;
+  xpub_parent = content;
   return controls;
 }
 

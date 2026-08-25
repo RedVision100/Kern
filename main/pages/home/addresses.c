@@ -204,13 +204,13 @@ static void show_address_detail(int index) {
   lv_obj_t *title_label = theme_create_label(detail_container, title, false);
   lv_obj_set_style_text_align(title_label, LV_TEXT_ALIGN_CENTER, 0);
 
-  // QR + address layout: column on portrait/square, row (side-by-side) on
-  // landscape so the address text fills the unused horizontal space.
+  // QR + address layout: keep the QR above the address so the full address
+  // remains readable. The QR can be opened fullscreen for scanning.
+
   lv_obj_t *content = lv_obj_create(detail_container);
   lv_obj_remove_style_all(content);
   lv_obj_set_size(content, LV_PCT(100), LV_SIZE_CONTENT);
-  lv_obj_set_flex_flow(content,
-                       landscape ? LV_FLEX_FLOW_ROW : LV_FLEX_FLOW_COLUMN);
+  lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_flex_align(content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
                         LV_FLEX_ALIGN_CENTER);
   lv_obj_set_style_pad_gap(content, pad, 0);
@@ -220,7 +220,7 @@ static void show_address_detail(int index) {
   // unlock alphanumeric mode (BIP-173), the label keeps the original case.
   char *upper = qr_bech32_to_upper(address);
   const char *qr_payload = upper ? upper : address;
-  int32_t square_size = theme_min_dim() * 55 / 100;
+  int32_t square_size = theme_min_dim() * 35 / 100;
   lv_obj_t *qr_container = theme_create_qr_container(content, square_size, 15);
   qr_create_optimal(qr_container, square_size - 30, qr_payload);
   qr_viewer_attach_fullscreen(qr_container, qr_payload, title);
@@ -232,10 +232,7 @@ static void show_address_detail(int index) {
   lv_obj_t *addr_label = lv_label_create(content);
   lv_label_set_recolor(addr_label, true);
   lv_label_set_text(addr_label, colored_addr);
-  if (landscape)
-    lv_obj_set_width(addr_label, scr_w - 2 * pad - square_size - pad);
-  else
-    lv_obj_set_width(addr_label, LV_PCT(95));
+  lv_obj_set_width(addr_label, LV_PCT(95));
   lv_label_set_long_mode(addr_label, LV_LABEL_LONG_WRAP);
   lv_obj_set_style_text_align(addr_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_set_style_text_font(addr_label, theme_font_medium(), 0);

@@ -61,3 +61,5 @@ __pycache__/
 AGENTS.md
 CLAUDE.md
 .claude/
+
+simulator/simulator/sim_data/

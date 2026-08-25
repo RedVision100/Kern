@@ -7,6 +7,9 @@
 static lv_font_t font_small;
 static lv_font_t font_medium;
 
+// Current accessibility text-size setting
+static text_size_t text_size = TEXT_SIZE_STANDARD;
+
 // Cached screen dimensions and derived sizes (set once in theme_init)
 static int32_t scr_w;
 static int32_t scr_h;
@@ -38,6 +41,7 @@ void theme_init(void) {
   scr_w = lv_disp_get_hor_res(NULL);
   scr_h = lv_disp_get_ver_res(NULL);
   scr_min_dim = scr_w < scr_h ? scr_w : scr_h;
+  text_size = settings_get_text_size();
 
   // All sizes scale with min_dim, the shorter axis: in portrait it is the width
   // (so portrait boards keep their sizes), while on landscape it caps paddings
@@ -103,6 +107,17 @@ lv_color_t accent_color(void) { return COLOR_CYAN; }
 const lv_font_t *theme_font_small(void) { return &font_small; }
 
 const lv_font_t *theme_font_medium(void) { return &font_medium; }
+
+void theme_set_text_size(text_size_t size) {
+  if (size > TEXT_SIZE_LARGE)
+    size = TEXT_SIZE_DEFAULT;
+
+  text_size = size;
+}
+
+text_size_t theme_get_text_size(void) {
+  return text_size;
+}
 
 int theme_screen_width(void) { return scr_w; }
 int theme_screen_height(void) { return scr_h; }

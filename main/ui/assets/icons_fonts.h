@@ -30,6 +30,9 @@
 #if !defined(ICONS_40) || ICONS_40
 #include "icons_40.h"
 #endif
+#if !defined(ICONS_48) || ICONS_48
+#include "icons_48.h"
+#endif
 
 /* Each board enables only the two sizes its policy selects; pruned
  * sizes are compiled out by their ICONS_<size>=0 guard. */
@@ -67,6 +70,10 @@ static theme_font_pair_t font_pair_for_size(uint16_t size) {
   case 40:
     return (theme_font_pair_t){&lv_font_montserrat_40, &icons_40};
 #endif
+#if LV_FONT_MONTSERRAT_48 && (!defined(ICONS_48) || ICONS_48)
+  case 48:
+    return (theme_font_pair_t){&lv_font_montserrat_48, &icons_48};
+#endif
   default:
     break;
   }
@@ -87,6 +94,8 @@ static theme_font_pair_t font_pair_for_size(uint16_t size) {
   return (theme_font_pair_t){&lv_font_montserrat_34, &icons_34};
 #elif LV_FONT_MONTSERRAT_40 && (!defined(ICONS_40) || ICONS_40)
   return (theme_font_pair_t){&lv_font_montserrat_40, &icons_40};
+#elif LV_FONT_MONTSERRAT_48 && (!defined(ICONS_48) || ICONS_48)
+  return (theme_font_pair_t){&lv_font_montserrat_48, &icons_48};
 #else
 #error "theme: no Montserrat icon font size enabled"
 #endif
