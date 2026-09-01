@@ -1,160 +1,442 @@
-# Kern Git Workflow
+# Git Workflow for Kern
 
-This guide describes the Git workflow for working from a personal Kern fork.
+A practical Git reference for the Kern project.
 
-For practice, the goal is simple:
+## 1. Check the Current Directory
 
-```text
-upstream → local master → origin
-                 |
-                 v
-          development branch
+```bash
+pwd
 ```
 
-`master` is the synchronization point. Development happens on separate branches.
+Shows where you are.
 
-## 1. Understand the Remotes
+Kern is located at:
 
-Check them at any time:
+```text
+~/Projects/Kern
+```
+
+Enter the repository:
+
+```bash
+cd ~/Projects/Kern
+```
+
+## 2. Check Repository Status
+
+```bash
+git status
+```
+
+This should be the first Git command you use.
+
+It tells you:
+- Current branch
+- Remote tracking status
+- Modified files
+- Untracked files
+- Staged changes
+- Whether the working tree is clean
+
+A clean repository looks like:
+
+```text
+On branch notes
+Your branch is up to date with 'origin/notes'.
+
+nothing to commit, working tree clean
+```
+
+## 3. See the Current Branch
+
+```bash
+git branch --show-current
+```
+
+Or:
+
+```bash
+git branch
+```
+
+The `*` marks the current branch.
+
+## 4. See All Branches
+
+```bash
+git branch -a
+```
+
+This shows local branches and remote branches.
+
+For Kern:
+- `origin` = your GitHub fork
+- `upstream` = the original Kern repository
+
+See the remote URLs with:
 
 ```bash
 git remote -v
 ```
 
-### `origin`
-
-Your personal GitHub fork.
-
-Example:
-
-```text
-git@github.com:YOUR-USERNAME/Kern.git
-```
-
-### `upstream`
-
-The official Kern repository.
-
-Example:
-
-```text
-git@github.com:odudex/Kern.git
-```
-
-Normally:
-
-- Fetch from `upstream`
-- Keep local `master` synchronized with `upstream/master`
-- Develop on a separate branch
-- Push development branches to `origin`
-- Do not push to the official repository unless authorized
-
-## 2. Start From a Clean Repository
-
-Before starting work:
+## 5. Check Branch Tracking
 
 ```bash
-git status
+git branch -vv
 ```
 
-Do not begin a new piece of work with unexplained local changes.
+This shows which remote branch each local branch tracks.
 
-## 3. Update Local Master
+For example:
 
-Fetch the official repository:
+```text
+* notes abc1234 [origin/notes] docs: update notes
+```
+
+This means the local `notes` branch tracks `origin/notes`.
+
+## 6. Switch Branches
+
+Switch to an existing branch:
 
 ```bash
-git fetch upstream
+git switch notes
 ```
 
-Switch to `master`:
+Accessibility branch:
+
+```bash
+git switch feat/accessibility-text-size
+```
+
+Master:
 
 ```bash
 git switch master
 ```
 
-Update it with a fast-forward-only merge:
+Always check `git status` if you are unsure which branch you are on.
+
+## 7. Create a New Branch
+
+Create and immediately switch to a new branch:
 
 ```bash
-git merge --ff-only upstream/master
+git switch -c feat/my-feature
 ```
 
-Synchronize submodules:
+For example:
 
 ```bash
-git submodule update --init --recursive
+git switch -c feat/new-camera-support
 ```
 
-Verify:
+Feature development should normally be done on a feature branch rather than directly on `master`.
+
+## 8. Fetch Remote Changes
+
+Fetch your fork:
 
 ```bash
-git status
-git log --oneline -1
+git fetch origin
 ```
 
-Using `--ff-only` prevents Git from creating an unexpected merge commit.
-
-## 4. Update Your Fork
-
-Once local `master` is synchronized and verified:
+Fetch the original Kern repository:
 
 ```bash
-git push origin master
+git fetch upstream
 ```
 
-The resulting flow is:
+Fetching updates Git's knowledge of remote branches and commits without changing your working files.
 
-```text
-Official Kern
-      |
-      | git fetch upstream
-      v
-Local master
-      |
-      | git push origin master
-      v
-Your fork
-```
-
-## 5. Create a Development Branch
-
-Do not normally develop directly on `master`.
-
-Create a branch from the current `master`:
+## 9. View Recent Commits
 
 ```bash
-git switch -c linux-dev-setup
+git log --oneline --decorate -5
 ```
 
-Use descriptive names for other work:
+Shows the five most recent commits in compact form.
 
-```text
-feature/qr-scanning
-feature/ui-improvement
-fix/simulator-crash
-docs/linux-development
-```
+## 10. See Your Changes
 
-Verify:
-
-```bash
-git status
-```
-
-## 6. Make Changes
-
-Work on the development branch.
-
-Regularly inspect the repository:
-
-```bash
-git status
-```
-
-Review unstaged changes:
+Unstaged changes:
 
 ```bash
 git diff
+```
+
+Staged changes:
+
+```bash
+git diff --cached
+```
+
+Use these before committing to review exactly what changed.
+
+## 11. Stage a File
+
+For example:
+
+```bash
+git add docs/omarchy-development-setup.md
+```
+
+`git add` places the current version of the file into Git's staging area.
+
+It does not create a commit.
+
+The basic flow is:
+
+```text
+Working directory
+       ↓
+    git add
+       ↓
+Staging area
+       ↓
+   git commit
+       ↓
+Git history
+```
+
+You can stage multiple files:
+
+```bash
+git add file1 file2
+```
+
+Or all changed files:
+
+```bash
+git add .
+```
+
+Use `git add .` carefully and check `git status` afterward.
+
+## 12. Check Staged Changes
+
+```bash
+git status
+```
+
+Look under:
+
+```text
+Changes to be committed
+```
+
+Then review them:
+
+```bash
+git diff --cached
+```
+
+## 13. Commit Changes
+
+Example:
+
+```bash
+git commit -m "docs: update Omarchy development notes"
+```
+
+A commit creates a permanent entry in your local Git history.
+
+Good commit messages describe what changed.
+
+Examples:
+
+```bash
+git commit -m "docs: add Omarchy development notes"
+git commit -m "docs: update Git workflow"
+git commit -m "feat(ui): add text size setting"
+git commit -m "fix(ui): correct accessibility text scaling"
+```
+
+## 14. Push to GitHub
+
+For the notes branch:
+
+```bash
+git push origin notes
+```
+
+If the branch already tracks its remote branch, you can normally use:
+
+```bash
+git push
+```
+
+`git push` sends your local commits to the remote repository.
+
+The normal workflow is:
+
+```text
+Edit
+ ↓
+git add
+ ↓
+git commit
+ ↓
+git push
+ ↓
+GitHub
+```
+
+## 15. Verify the Push
+
+```bash
+git status
+```
+
+You want:
+
+```text
+On branch notes
+Your branch is up to date with 'origin/notes'.
+
+nothing to commit, working tree clean
+```
+
+You can also check:
+
+```bash
+git log --oneline --decorate -3
+```
+
+## 16. Undo Staging
+
+If you accidentally staged a file:
+
+```bash
+git restore --staged docs/omarchy-development-setup.md
+```
+
+This removes it from the staging area but keeps your edits.
+
+## 17. Discard Uncommitted Changes
+
+To discard changes to a specific file:
+
+```bash
+git restore docs/omarchy-development-setup.md
+```
+
+**Warning:** this permanently discards that file's uncommitted changes.
+
+Do not use it unless you are certain you want to lose the changes.
+
+## 18. Compare a Branch With Master
+
+Commits on the current branch that are not in `master`:
+
+```bash
+git log --oneline master..HEAD
+```
+
+Commits in `master` that are not on the current branch:
+
+```bash
+git log --oneline HEAD..master
+```
+
+## 19. Compare Master With Upstream
+
+```bash
+git log --oneline master..upstream/master
+```
+
+Then:
+
+```bash
+git log --oneline upstream/master..master
+```
+
+If both commands produce no output, neither branch has commits that the other lacks.
+
+## 20. Kern Documentation Workflow
+
+For documentation work:
+
+```bash
+cd ~/Projects/Kern
+git status
+git switch notes
+```
+
+Edit the documentation.
+
+Review changes:
+
+```bash
+git diff
+```
+
+Stage the file:
+
+```bash
+git add docs/omarchy-development-setup.md
+```
+
+Review the staged changes:
+
+```bash
+git diff --cached
+```
+
+Commit:
+
+```bash
+git commit -m "docs: update Omarchy development notes"
+```
+
+Push:
+
+```bash
+git push origin notes
+```
+
+Verify:
+
+```bash
+git status
+```
+
+Expected:
+
+```text
+nothing to commit, working tree clean
+```
+
+## 21. Kern Feature Development Workflow
+
+For a new feature:
+
+```bash
+cd ~/Projects/Kern
+git status
+git switch master
+git fetch upstream
+```
+
+Create a feature branch:
+
+```bash
+git switch -c feat/my-feature
+```
+
+Make your changes.
+
+Review:
+
+```bash
+git status
+git diff
+```
+
+Stage:
+
+```bash
+git add <files>
 ```
 
 Review staged changes:
@@ -163,237 +445,83 @@ Review staged changes:
 git diff --cached
 ```
 
-Do not blindly stage everything. Review what is actually being committed.
-
-## 7. Commit Changes
-
-Stage the files you intend to commit:
+Commit:
 
 ```bash
-git add <files>
+git commit -m "feat: describe the feature"
 ```
 
-Commit with a clear message:
+Push the new branch:
 
 ```bash
-git commit -m "Add simulator development documentation"
+git push -u origin feat/my-feature
 ```
 
-Good commit messages describe the change.
+The `-u` establishes tracking between the local and remote branch.
 
-Avoid messages such as:
-
-```text
-fix
-changes
-update
-stuff
-```
-
-Keep commits logically focused. A commit should explain one coherent change rather than combining unrelated work.
-
-## 8. Push Your Development Branch
-
-The first push:
-
-```bash
-git push -u origin <development-branch>
-```
-
-Later pushes can normally use:
+Future pushes can then use:
 
 ```bash
 git push
 ```
 
-Your development branch belongs on `origin`, not on the official repository.
+## 22. Quick Reference
 
-## 9. Pull Requests
-
-When working toward a contribution to Kern, open a Pull Request from your fork into the official repository according to the project's contribution guidelines.
-
-For the current practice phase, it is also reasonable to use your fork simply to practice the workflow without submitting anything upstream.
-
-The important discipline is the same:
-
-```text
-master = clean synchronization point
-branch = development work
-origin = personal fork
-upstream = official project
-```
-
-## 10. Keep a Development Branch Current
-
-If `master` has moved forward, update it first:
-
-```bash
-git fetch upstream
-git switch master
-git merge --ff-only upstream/master
-git submodule update --init --recursive
-git push origin master
-```
-
-Then return to your development branch:
-
-```bash
-git switch <development-branch>
-```
-
-Do not blindly merge or rebase. Inspect the state of the branch and follow the project's contribution workflow for integrating upstream changes.
-
-## 11. Compare Branches
-
-See commits that upstream has and local `master` does not:
-
-```bash
-git log --oneline master..upstream/master
-```
-
-Compare your fork with upstream:
-
-```bash
-git log --oneline origin/master..upstream/master
-```
-
-See the remote branches:
-
-```bash
-git branch -r
-```
-
-## 12. Submodules
-
-After changing Kern revisions:
-
-```bash
-git submodule update --init --recursive
-```
-
-Check:
-
-```bash
-git submodule status
-git status
-```
-
-Important submodules in the documented setup include:
-
-```text
-components/cUR
-components/k_quirc
-components/libwally-core
-```
-
-The exact set may change as Kern evolves.
-
-## 13. Accidental Files or Changes
-
-If `git status` shows an unexpected file, inspect it before deleting it.
-
-Useful commands:
-
-```bash
-ls -l
-file "filename"
-cat "filename"
-```
-
-If a tracked file was accidentally modified, inspect it:
-
-```bash
-git diff -- path/to/file
-```
-
-Only discard changes after confirming they are unwanted:
-
-```bash
-git restore path/to/file
-```
-
-## 14. Before You Commit
-
-Always check:
+For normal work:
 
 ```bash
 git status
+```
+
+**Check repository state.**
+
+```bash
 git diff
 ```
 
-Look specifically for:
-
-- Secrets
-- Private keys
-- Seed material
-- Credentials
-- Unintended files
-- Debug artifacts
-- Generated files
-- Changes unrelated to the commit
-
-Never put secrets into source files, Git commits, GitHub issues, or documentation.
-
-## 15. End-of-Day Check
-
-If the work is complete:
+**Review changes.**
 
 ```bash
-git status
-git diff
-git add <files>
+git add <file>
+```
+
+**Stage changes.**
+
+```bash
+git diff --cached
+```
+
+**Review staged changes.**
+
+```bash
 git commit -m "description of change"
-git push
-git status
 ```
 
-If work is unfinished, do not create meaningless commits just to make the working tree clean. Use a logical checkpoint commit when appropriate and leave the development branch in a state you can understand when you return.
-
-## 16. Git Recovery Principle
-
-When something unexpected happens, stop before changing or deleting anything.
-
-First inspect:
+**Create a commit.**
 
 ```bash
-git status
-git diff
-git log --oneline -10
-git branch --show-current
-git remote -v
-```
-
-The safest Git habit is to understand the current state before attempting to fix it.
-
-## Daily Workflow
-
-A normal development session looks like:
-
-```bash
-cd Kern
-
-git fetch upstream
-
-git status
-
-git switch master
-git merge --ff-only upstream/master
-git submodule update --init --recursive
-
-git switch <development-branch>
-```
-
-Work and test.
-
-Then:
-
-```bash
-git status
-git diff
-
-git add <files>
-git commit -m "description of change"
 git push
 ```
 
-Keep `master` clean and use development branches for actual work.
+**Push the commit to GitHub.**
+
+```bash
+git status
+```
+
+**Confirm the working tree is clean.**
+
+### Core Workflow
+
+```text
+1. git status
+2. Edit files
+3. git diff
+4. git add <file>
+5. git diff --cached
+6. git commit -m "..."
+7. git push
+8. git status
+```
+
+This is the core Git workflow used for Kern documentation and feature development.
