@@ -128,6 +128,29 @@ static int32_t entry_available_width(ui_menu_entry_view_t *view) {
   return LV_MAX(width, 1);
 }
 
+static bool entry_needs_horizontal_large_text_layout(
+    ui_menu_entry_view_t *view, int32_t gap, int32_t available_width) {
+  if (!view || !view->button || !view->icon || !view->label ||
+      !theme_is_landscape() || theme_get_text_size() != TEXT_SIZE_LARGE)
+    return false;
+
+  lv_point_t icon_size;
+  lv_point_t label_size;
+  lv_text_get_size(&icon_size, lv_label_get_text(view->icon),
+                   lv_obj_get_style_text_font(view->icon, 0),
+                   lv_obj_get_style_text_letter_space(view->icon, 0),
+                   lv_obj_get_style_text_line_space(view->icon, 0),
+                   UI_MENU_TEXT_MEASURE_MAX, LV_TEXT_FLAG_NONE);
+  lv_text_get_size(&label_size, lv_label_get_text(view->label),
+                   lv_obj_get_style_text_font(view->label, 0),
+                   lv_obj_get_style_text_letter_space(view->label, 0),
+                   lv_obj_get_style_text_line_space(view->label, 0),
+                   available_width, LV_TEXT_FLAG_NONE);
+
+  return icon_size.y + gap + label_size.y >
+         lv_obj_get_content_height(view->button);
+}
+
 static void apply_entry_content_layout(ui_menu_t *menu, int index) {
   ui_menu_entry_view_t *view = entry_view(menu, index);
   if (!view || !view->button || !view->content || !view->label)
@@ -140,6 +163,8 @@ static void apply_entry_content_layout(ui_menu_t *menu, int index) {
   int32_t icon_width =
       has_icon ? measure_label_text_width(view->icon, UI_MENU_TEXT_MEASURE_MAX)
                : 0;
+  bool horizontal_layout = entry_needs_horizontal_large_text_layout(
+      view, gap, available_width);
 
   lv_obj_set_flex_flow(view->button, LV_FLEX_FLOW_ROW);
   lv_obj_set_flex_align(view->button,
@@ -148,7 +173,7 @@ static void apply_entry_content_layout(ui_menu_t *menu, int index) {
                         LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
   lv_obj_set_style_pad_column(view->button, view->action_button ? 0 : gap, 0);
 
-  lv_obj_set_flex_flow(view->content, has_icon && landscape
+  lv_obj_set_flex_flow(view->content, has_icon && landscape && !horizontal_layout
                                           ? LV_FLEX_FLOW_COLUMN
                                           : LV_FLEX_FLOW_ROW);
   lv_obj_set_flex_align(view->content, LV_FLEX_ALIGN_CENTER,
@@ -156,7 +181,7 @@ static void apply_entry_content_layout(ui_menu_t *menu, int index) {
   lv_obj_set_style_pad_gap(view->content, gap, 0);
 
   int32_t label_max_width = available_width;
-  if (has_icon && !landscape)
+  if (has_icon && (!landscape || horizontal_layout))
     label_max_width -= icon_width + gap;
 
   label_max_width = LV_MAX(label_max_width, 1);
@@ -176,8 +201,9 @@ static void apply_entry_content_layout(ui_menu_t *menu, int index) {
   int32_t content_width = label_width;
 
   if (has_icon)
-    content_width = landscape ? LV_MAX(icon_width, label_width)
-                              : icon_width + gap + label_width;
+    content_width = landscape && !horizontal_layout
+                        ? LV_MAX(icon_width, label_width)
+                        : icon_width + gap + label_width;
 
   content_width = LV_MIN(LV_MAX(content_width, 1), available_width);
   lv_obj_set_width(view->content, content_width);
@@ -207,6 +233,30 @@ static void size_entry_button(ui_menu_t *menu, int index) {
   lv_obj_set_size(view->button, LV_MAX(width, theme_min_touch_size()),
                   LV_MAX(height, theme_min_touch_size()));
   lv_obj_set_flex_grow(view->button, 0);
+}
+
+static void equalize_row_button_heights(ui_menu_t *menu) {
+  int columns = menu_column_count();
+  int count = menu->config.entry_count;
+
+  for (int first = 0; first < count; first += columns) {
+    int last = LV_MIN(first + columns, count);
+    if (last - first < columns)
+      continue;
+
+    int32_t row_height = 0;
+    for (int index = first; index < last; index++) {
+      ui_menu_entry_view_t *view = entry_view(menu, index);
+      if (view && view->button)
+        row_height = LV_MAX(row_height, lv_obj_get_height(view->button));
+    }
+
+    for (int index = first; index < last; index++) {
+      ui_menu_entry_view_t *view = entry_view(menu, index);
+      if (view && view->button)
+        lv_obj_set_height(view->button, row_height);
+    }
+  }
 }
 
 /* Two phases with a single layout pass between them: size every button first,
@@ -243,6 +293,9 @@ static void refresh_menu_layout(ui_menu_t *menu) {
     if (grow > 0)
       lv_obj_set_height(view->button, lv_obj_get_height(view->button) + grow);
   }
+
+  equalize_row_button_heights(menu);
+  lv_obj_update_layout(menu->container);
 
   menu->layout_dirty = false;
 }

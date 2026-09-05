@@ -177,16 +177,6 @@ int main(int argc, char *argv[]) {
     lv_indev_t *mouse = lv_sdl_mouse_create();
     (void)mouse;
 
-    /* Initialize theme (copies Montserrat fonts, sets icon fallbacks) */
-    theme_init();
-
-    /* Apply dark background and default text style to screen */
-    lv_obj_t *scr = lv_screen_active();
-    theme_apply_screen(scr);
-
-    /* Force initial render */
-    lv_refr_now(NULL);
-
     /* -----------------------------------------------------------------------
      * Initialize NVS (file-backed storage for settings and PIN)
      * --------------------------------------------------------------------- */
@@ -203,6 +193,16 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Settings init failed, using defaults: %s\n",
                 esp_err_to_name(settings_ret));
     }
+
+    /* Initialize theme after settings so persisted font policy is available. */
+    theme_init();
+
+    /* Apply dark background and default text style to screen */
+    lv_obj_t *scr = lv_screen_active();
+    theme_apply_screen(scr);
+
+    /* Force initial render */
+    lv_refr_now(NULL);
 
     /* Initialize PMIC (simulated battery on wave_35; no-op on wave_4b) */
     bsp_pmic_init();

@@ -9,5 +9,6 @@ typedef struct {
 } ui_font_policy_t;
 
 ui_font_policy_t ui_font_policy_for_display(uint32_t width, uint32_t height);
+ui_font_policy_t ui_font_policy_for_large_text(uint32_t width, uint32_t height);
 
 #endif // FONT_POLICY_H

@@ -37,6 +37,23 @@ typedef struct {
 // never here.
 #include "assets/icons_fonts.h"
 
+static void refresh_fonts_for_text_size(void) {
+  ui_font_policy_t policy =
+      text_size == TEXT_SIZE_LARGE
+          ? ui_font_policy_for_large_text(scr_w, scr_h)
+          : ui_font_policy_for_display(scr_w, scr_h);
+  theme_font_pair_t small = font_pair_for_size(policy.small_px);
+  theme_font_pair_t medium = font_pair_for_size(policy.medium_px);
+
+  /* Widgets retain pointers to these static font objects. Update their
+   * contents rather than replacing the objects so those pointers stay valid. */
+  font_small = *small.text;
+  font_small.fallback = small.icon;
+
+  font_medium = *medium.text;
+  font_medium.fallback = medium.icon;
+}
+
 void theme_init(void) {
   scr_w = lv_disp_get_hor_res(NULL);
   scr_h = lv_disp_get_ver_res(NULL);
@@ -61,15 +78,7 @@ void theme_init(void) {
   // Grows the knob to min_touch: track + 2 * pad == sz_min_touch
   sz_slider_knob_pad = (sz_min_touch - sz_slider_height) / 2; // 35
 
-  ui_font_policy_t policy = ui_font_policy_for_display(scr_w, scr_h);
-  theme_font_pair_t small = font_pair_for_size(policy.small_px);
-  theme_font_pair_t medium = font_pair_for_size(policy.medium_px);
-
-  font_small = *small.text;
-  font_small.fallback = small.icon;
-
-  font_medium = *medium.text;
-  font_medium.fallback = medium.icon;
+  refresh_fonts_for_text_size();
 
   theme_widgets_init();
 }
@@ -113,6 +122,7 @@ void theme_set_text_size(text_size_t size) {
     size = TEXT_SIZE_DEFAULT;
 
   text_size = size;
+  refresh_fonts_for_text_size();
 }
 
 text_size_t theme_get_text_size(void) {

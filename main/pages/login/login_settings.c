@@ -1,7 +1,8 @@
-// Login Settings Page - Pre-login configuration (security, brightness,
+// Login Settings Page - Pre-login configuration (security, display,
 // screensaver)
 
 #include "login_settings.h"
+#include "login.h"
 #include "../../core/settings.h"
 #include "../../ui/dropdown_page.h"
 #include "../../ui/input_helpers.h"
@@ -26,11 +27,19 @@ static lv_obj_t *brightness_label = NULL;
 // -- Screensaver detail page --
 static lv_obj_t *screensaver_screen = NULL;
 
+// -- Text-size detail page --
+static lv_obj_t *text_size_screen = NULL;
+static bool text_size_rebuild_pending = false;
+
 // Forward declarations
 static void show_brightness_page(void);
 static void destroy_brightness_page(void);
 static void show_screensaver_page(void);
 static void destroy_screensaver_page(void);
+static void show_text_size_page(void);
+static void destroy_text_size_page(void);
+static void rebuild_settings_menu(void);
+static void rebuild_prelogin_hierarchy_async(void *user_data);
 
 // ── Screen Brightness detail page ──
 
@@ -121,6 +130,61 @@ static void destroy_screensaver_page(void) {
   }
 }
 
+// ── Text-size detail page ──
+
+static const uint16_t text_size_values[] = {TEXT_SIZE_STANDARD, TEXT_SIZE_LARGE};
+static const char *text_size_options = "Standard\nLarge";
+
+static void rebuild_prelogin_hierarchy_async(void *user_data) {
+  (void)user_data;
+  text_size_rebuild_pending = false;
+
+  /* This runs after the dropdown's value-change event has returned, so deleting
+   * the detail page and its ancestors cannot invalidate the active event path. */
+  login_settings_page_destroy();
+  login_page_destroy();
+  login_page_create(lv_screen_active());
+  login_page_show();
+}
+
+static void text_size_dropdown_cb(lv_event_t *e) {
+  uint16_t sel = lv_dropdown_get_selected(lv_event_get_target(e));
+  if (sel >= sizeof(text_size_values) / sizeof(text_size_values[0]))
+    return;
+
+  text_size_t size = (text_size_t)text_size_values[sel];
+  settings_set_text_size(size);
+  theme_set_text_size(size);
+
+  if (!text_size_rebuild_pending) {
+    text_size_rebuild_pending =
+        lv_async_call(rebuild_prelogin_hierarchy_async, NULL) == LV_RESULT_OK;
+  }
+}
+
+static void text_size_back_cb(lv_event_t *e) {
+  (void)e;
+  destroy_text_size_page();
+  ui_menu_show(settings_menu);
+}
+
+static void show_text_size_page(void) {
+  ui_menu_hide(settings_menu);
+  uint16_t sel = ui_index_of_u16(
+      text_size_values, sizeof(text_size_values) / sizeof(text_size_values[0]),
+      settings_get_text_size(), TEXT_SIZE_STANDARD);
+  text_size_screen =
+      ui_dropdown_page_create("Text Size", NULL, text_size_options, sel,
+                              text_size_dropdown_cb, text_size_back_cb);
+}
+
+static void destroy_text_size_page(void) {
+  if (text_size_screen) {
+    lv_obj_delete(text_size_screen);
+    text_size_screen = NULL;
+  }
+}
+
 // ── Security submenu ──
 
 static void security_return_cb(void) {
@@ -151,11 +215,27 @@ static void firmware_update_cb(void) {
 
 static void brightness_cb(void) { show_brightness_page(); }
 
+static void text_size_cb(void) { show_text_size_page(); }
+
 static void screensaver_cb(void) { show_screensaver_page(); }
 
 static void settings_back_cb(void) {
   if (return_callback)
     return_callback();
+}
+
+static void rebuild_settings_menu(void) {
+  if (settings_menu) {
+    ui_menu_destroy(settings_menu);
+    settings_menu = NULL;
+  }
+
+  settings_menu = ui_menu_create(settings_screen, "Settings", settings_back_cb);
+  ui_menu_add_entry(settings_menu, "Security", security_cb);
+  ui_menu_add_entry(settings_menu, "Screen Brightness", brightness_cb);
+  ui_menu_add_entry(settings_menu, "Text Size", text_size_cb);
+  ui_menu_add_entry(settings_menu, "Screensaver", screensaver_cb);
+  ui_menu_add_entry(settings_menu, "Firmware Update", firmware_update_cb);
 }
 
 // ── Public lifecycle ──
@@ -168,13 +248,10 @@ void login_settings_page_create(lv_obj_t *parent, void (*return_cb)(void)) {
   brightness_slider = NULL;
   brightness_label = NULL;
   screensaver_screen = NULL;
+  text_size_screen = NULL;
   return_callback = return_cb;
   settings_screen = theme_create_page_container(parent);
-  settings_menu = ui_menu_create(settings_screen, "Settings", settings_back_cb);
-  ui_menu_add_entry(settings_menu, "Security", security_cb);
-  ui_menu_add_entry(settings_menu, "Screen Brightness", brightness_cb);
-  ui_menu_add_entry(settings_menu, "Screensaver", screensaver_cb);
-  ui_menu_add_entry(settings_menu, "Firmware Update", firmware_update_cb);
+  rebuild_settings_menu();
 }
 
 void login_settings_page_show(void) {
@@ -188,9 +265,12 @@ void login_settings_page_hide(void) {
 }
 
 void login_settings_page_destroy(void) {
+  lv_async_call_cancel(rebuild_prelogin_hierarchy_async, NULL);
+  text_size_rebuild_pending = false;
   security_settings_page_destroy();
   destroy_brightness_page();
   destroy_screensaver_page();
+  destroy_text_size_page();
   if (settings_menu) {
     ui_menu_destroy(settings_menu);
     settings_menu = NULL;
